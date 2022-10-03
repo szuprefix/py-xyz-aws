@@ -29,4 +29,4 @@ def gen_signature(key, secret_id=SECRET_ID, secret_key=SECRET_KEY, expire=300,
             },
             ExpiresIn=expire
         )
-        return url
+        return dict(bucket= bucket, region=REGION, url = url)

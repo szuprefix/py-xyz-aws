@@ -30,3 +30,19 @@ def gen_signature(key, secret_id=SECRET_ID, secret_key=SECRET_KEY, expire=300,
             ExpiresIn=expire
         )
         return dict(bucket= bucket, region=REGION, url = url)
+
+
+def down_and_upload_to_aws(url, bucket=BUCKET):
+    import boto3, hashlib
+    from xyz_util.crawlutils import http_get
+    from django.core.files.base import ContentFile
+    s3 = boto3.client('s3')
+    r = http_get(url)
+    md5 = hashlib.md5()
+    fd = r.content
+    md5.update(fd)
+    ct = r.headers['Content-Type']
+    ps = ct.split('/')
+    fpath = 'resource/%s/%s.%s' % (ps[0], md5.hexdigest(), ps[1])
+    s3.upload_fileobj(ContentFile(fd), bucket, fpath, ExtraArgs=dict(ACL='public-read', ContentType=ct))
+    return 'https://%s.s3.%s.amazonaws.com/%s' % (bucket, s3.meta.region_name, fpath)

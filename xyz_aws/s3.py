@@ -15,24 +15,24 @@ BUCKET = A('BUCKET')
 
 def gen_signature(key, secret_id=SECRET_ID, secret_key=SECRET_KEY, expire=300,
                   bucket=BUCKET):
-        s3 = boto3.client('s3',
-                                 aws_access_key_id=secret_id,
-                                 aws_secret_access_key=secret_key,
-                                 config=Config(signature_version='s3v4'),
-                                 region_name=REGION)
-        url = s3.generate_presigned_url(
-            ClientMethod='put_object',
-            Params={
-                'Bucket': bucket,
-                'Key': key,
-                'ACL': 'public-read'
-            },
-            ExpiresIn=expire
-        )
-        return dict(bucket= bucket, region=REGION, url = url)
+    s3 = boto3.client('s3',
+                      aws_access_key_id=secret_id,
+                      aws_secret_access_key=secret_key,
+                      config=Config(signature_version='s3v4'),
+                      region_name=REGION)
+    url = s3.generate_presigned_url(
+        ClientMethod='put_object',
+        Params={
+            'Bucket': bucket,
+            'Key': key,
+            'ACL': 'public-read'
+        },
+        ExpiresIn=expire
+    )
+    return dict(bucket=bucket, region=REGION, url=url)
 
 
-def down_and_upload_to_aws(url, bucket=BUCKET):
+def down_and_upload_to_aws(url, bucket=BUCKET, cloudfront_domain=None):
     import boto3, hashlib
     from xyz_util.crawlutils import http_get
     from django.core.files.base import ContentFile
@@ -45,4 +45,5 @@ def down_and_upload_to_aws(url, bucket=BUCKET):
     ps = ct.split('/')
     fpath = 'resource/%s/%s.%s' % (ps[0], md5.hexdigest(), ps[1])
     s3.upload_fileobj(ContentFile(fd), bucket, fpath, ExtraArgs=dict(ACL='public-read', ContentType=ct))
-    return 'https://%s.s3.%s.amazonaws.com/%s' % (bucket, s3.meta.region_name, fpath)
+    domain = cloudfront_domain if cloudfront_domain else '%s.s3.%s.amazonaws.com' % (bucket, s3.meta.region_name)
+    return 'https://%s/%s' % (domain, fpath)

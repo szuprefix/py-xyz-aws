@@ -14,7 +14,7 @@ BUCKET = A('BUCKET')
 
 
 def gen_signature(key, secret_id=SECRET_ID, secret_key=SECRET_KEY, expire=300,
-                  bucket=BUCKET):
+                  bucket=BUCKET, acl='public-read'):
     s3 = boto3.client('s3',
                       aws_access_key_id=secret_id,
                       aws_secret_access_key=secret_key,
@@ -25,7 +25,7 @@ def gen_signature(key, secret_id=SECRET_ID, secret_key=SECRET_KEY, expire=300,
         Params={
             'Bucket': bucket,
             'Key': key,
-            'ACL': 'public-read'
+            'ACL': acl
         },
         ExpiresIn=expire
     )

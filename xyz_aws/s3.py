@@ -14,19 +14,29 @@ BUCKET = A('BUCKET')
 
 
 def gen_signature(key, secret_id=SECRET_ID, secret_key=SECRET_KEY, expire=300,
-                  bucket=BUCKET, acl='public-read'):
+                  bucket=BUCKET, method='put', region=REGION, **kwargs):
     s3 = boto3.client('s3',
                       aws_access_key_id=secret_id,
                       aws_secret_access_key=secret_key,
                       config=Config(signature_version='s3v4'),
-                      region_name=REGION)
+                      region_name=region)
+    # url = s3.generate_presigned_url(
+    #     ClientMethod='%s_object' % method,
+    #     Params={
+    #         'Bucket': bucket,
+    #         'Key': key,
+    #         'ACL': acl
+    #     },
+    #     ExpiresIn=expire
+    # )
+    params = dict(
+        Bucket=bucket,
+        Key=key,
+        **kwargs
+    )
     url = s3.generate_presigned_url(
-        ClientMethod='put_object',
-        Params={
-            'Bucket': bucket,
-            'Key': key,
-            'ACL': acl
-        },
+        '%s_object' % method,
+        Params=params,
         ExpiresIn=expire
     )
     return dict(bucket=bucket, region=REGION, url=url)

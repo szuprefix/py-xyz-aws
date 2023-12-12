@@ -20,15 +20,6 @@ def gen_signature(key, secret_id=SECRET_ID, secret_key=SECRET_KEY, expire=300,
                       aws_secret_access_key=secret_key,
                       config=Config(signature_version='s3v4'),
                       region_name=region)
-    # url = s3.generate_presigned_url(
-    #     ClientMethod='%s_object' % method,
-    #     Params={
-    #         'Bucket': bucket,
-    #         'Key': key,
-    #         'ACL': acl
-    #     },
-    #     ExpiresIn=expire
-    # )
     params = dict(
         Bucket=bucket,
         Key=key,
@@ -54,6 +45,10 @@ def down_and_upload_to_aws(url, bucket=BUCKET, cloudfront_domain=None):
     ct = r.headers['Content-Type']
     ps = ct.split('/')
     fpath = 'resource/%s/%s.%s' % (ps[0], md5.hexdigest(), ps[1])
-    s3.upload_fileobj(ContentFile(fd), bucket, fpath, ExtraArgs=dict(ACL='public-read', ContentType=ct))
+    import requests
+    r = requests.put(url, data=ContentFile(fd))
+    if r.status_code != 200:
+        raise Exception("Error(%s): %s" % (r.status_code, r.text))
+    # s3.upload_fileobj(ContentFile(fd), bucket, fpath, ExtraArgs=dict(ACL='public-read', ContentType=ct))
     domain = cloudfront_domain if cloudfront_domain else '%s.s3.%s.amazonaws.com' % (bucket, s3.meta.region_name)
     return 'https://%s/%s' % (domain, fpath)

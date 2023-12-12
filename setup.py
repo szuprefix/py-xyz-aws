@@ -5,7 +5,7 @@ import sys
 
 setup(
     name="xyz-aws",
-    version="0.1.5",
+    version="0.1.6",
     author="XYZSaas",
     author_email="szuprefix@126.com",
     description="aws utils",

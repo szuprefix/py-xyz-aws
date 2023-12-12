@@ -45,8 +45,9 @@ def down_and_upload_to_aws(url, bucket=BUCKET, cloudfront_domain=None):
     ct = r.headers['Content-Type']
     ps = ct.split('/')
     fpath = 'resource/%s/%s.%s' % (ps[0], md5.hexdigest(), ps[1])
+    surl = gen_signature(fpath, ContentType=ct)['url']
     import requests
-    r = requests.put(url, data=ContentFile(fd))
+    r = requests.put(surl, data=ContentFile(fd), headers={'Content-Type': ct})
     if r.status_code != 200:
         raise Exception("Error(%s): %s" % (r.status_code, r.text))
     # s3.upload_fileobj(ContentFile(fd), bucket, fpath, ExtraArgs=dict(ACL='public-read', ContentType=ct))
